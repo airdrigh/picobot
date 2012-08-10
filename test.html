@@ -236,6 +236,7 @@
 		var oneStep = false;
 
 		var textarea = "";
+		var numEmptyCells;
 		
 		var Color = {
 			RED : "red",
@@ -337,6 +338,7 @@
 			puzzle[index].src = "img/wall_" + wall_index + ".png";
 		}
 
+		// TODO: make this play nice with completeness tracking
 		function toggleWall(index) {
 			if (puzzle[index].src.match("empty")) {
 				setWall(index, chooseWall(index));
@@ -367,8 +369,16 @@
 			var i = picobot[1] * WIDTH + picobot[0];
 			var cell = document.getElementById('cell_' + i);
 
-			cell.src = "img/empty_cleared.png";
-
+			if (cell.src.match(/empty_uncleared.png$/)) {
+				cell.src = "img/empty_cleared.png";
+				numEmptyCells--;
+				if (numEmptyCells == 0) {
+					stopPicobot();
+					surroundings.innerHTML = "Complete!";
+					return;
+				}
+			}
+			
 			var str = "";
 			if (isWall(picobot[0], picobot[1]-1)) {
 				str = str + "N";
@@ -456,7 +466,7 @@
 			picobot_cell.style.backgroundImage = "url('img/" + color + ".gif')"
 		}
 
-		function createWorld() {
+		function createWorld() {			
 			puzzle = new Array(WIDTH * HEIGHT);
 
 			world = document.getElementById('world');
@@ -475,9 +485,12 @@
 				puzzle[i] = document.getElementById('cell_' + i);
 			}
 
+			numEmptyCells = 0;
 			for(i = 0; i < WIDTH*HEIGHT; i++) {
 				if (map[i] == 1) {
 					toggleWall(i);
+				} else {
+					numEmptyCells++;
 				}
 			}
 		}
@@ -789,7 +802,6 @@
 						// We evaluate the current position
 						evaluatePicobotPosition();
 						if (oneStep) {
-							//alert("stepping");
 							stopPicobot();
 							oneStep = false;
 						}
