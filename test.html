@@ -342,9 +342,11 @@
 		function toggleWall(index) {
 			if (puzzle[index].src.match("empty")) {
 				setWall(index, chooseWall(index));
+				numEmptyCells--;
 			}
 			else {
 				puzzle[index].src = "img/empty_uncleared.png";
+				numEmptyCells++;
 			}
 
 			// Choose walls around the current space
@@ -485,12 +487,10 @@
 				puzzle[i] = document.getElementById('cell_' + i);
 			}
 
-			numEmptyCells = 0;
+			numEmptyCells = WIDTH*HEIGHT;
 			for(i = 0; i < WIDTH*HEIGHT; i++) {
 				if (map[i] == 1) {
 					toggleWall(i);
-				} else {
-					numEmptyCells++;
 				}
 			}
 		}
