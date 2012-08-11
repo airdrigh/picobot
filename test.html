@@ -804,6 +804,7 @@
 			return str;
 		}
 		
+		// TODO: verbose/terse option, verbose screen reader friendly
 		function surroundingsLong() {
 			var str = "";
 			if (isWall(picobot[0], picobot[1]-1)) {
@@ -836,9 +837,9 @@
 			surroundings.innerHTML += "STEP " + stepNum++ + 
 			": state " + picobot_state + 
 			"; Walls to " + str + 
-			"; Applying rule from line #" + rule.lineNum + 
-			" ( " + rule.state + " " + rule.match +
-			" -> " + rule.next_direction + " " + rule.next_state + " )"+"\n";
+			"; Applying rule #" + rule.lineNum + 
+			": " + rule.state + " " + rule.match +
+			" -> " + rule.next_direction + " " + rule.next_state +"\n";
 			surroundings.scrollTop = surroundings.scrollHeight; // scroll to end
 			
 		}
@@ -1023,6 +1024,7 @@
 				padding: 0;
 			}
 		</style>
+		<title>Picobot</title>
 	</head>
 	<body onload="initialize()">
 		<table cellspacing = 0 cellpadding = 0>
@@ -1099,6 +1101,6 @@
 				</td>
 			</tr>
 		</table>
-		<textarea class="output_box" id="surroundings" disabled></textarea>
+		<textarea class="output_box" id="surroundings"></textarea>
 	</body>
 </html>
