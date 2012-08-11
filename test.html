@@ -3,7 +3,7 @@
 <html>
 	<head>
 		<script>
-		var speed = 1;
+		var speed = 1;	// TODO: set to medium (25) for ship
 		
 		var WIDTH = 25;
 		var HEIGHT = 25;
@@ -202,7 +202,7 @@
 			1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 		];
 		var maps = [map0, map1, map2, map3, map4, map5, map6];
-		var map = map0;
+		var map = map2;	// TODO: make map 0 default for ship
 		
 		var picobot = [4, 21];
 		var picobot_animation = 'red';
@@ -261,6 +261,14 @@
 			var mapNum = menu.options[menu.selectedIndex].value;
 			map = maps[mapNum];
 			initialize();
+		}
+		
+		function changeSpeed(menu) {
+			speed = menu.options[menu.selectedIndex].value;
+			if (updateTimer != "") {
+				window.clearInterval(updateTimer);
+				updateTimer = window.setInterval("update()", speed);
+			}
 		}
 		
 		function isWall(x, y) {
@@ -442,7 +450,9 @@
 			picobot_cell.style.backgroundImage = "url('img/" + color + ".gif')"
 		}
 
-		function createWorld() {			
+		function createWorld() {
+			stepNum = 0;
+						
 			puzzle = new Array(WIDTH * HEIGHT);
 
 			world = document.getElementById('world');
@@ -614,6 +624,10 @@
 		}
 
 		function startPicobot() {
+			if (complete) {
+				complete = false;
+				createWorld();
+			}
 			if (updateTimer == "") {
 				evaluatePicobotPosition();
 				updateTimer = window.setInterval("update()", speed);
@@ -977,13 +991,21 @@
 -->
 						|
 						<select onchange="changeMap(this)">
-							<option value="0">Map 0: Open Square</option>
+							<option value="0">Map 0: Open Square</option> <!-- TODO: make map 0 default -->
 							<option value="1">Map 1: Diamond</option>
-							<option value="2">Map 2: Maze</option>
+							<option value="2" selected>Map 2: Maze</option>
 							<option value="3">Map 3: Rooms A</option>
 							<option value="4">Map 4: Rooms B</option>
 							<option value="5">Map 5: Obstacles</option>
 							<option value="6">Map 6: Rooms + Obstacles</option>
+						</select>	
+
+						<select onchange="changeSpeed(this)">
+							<option value="1">Faster</option>
+							<option value="12">Fast</option>
+							<option value="25">Medium</option> <!-- TODO: make selected by default --> 
+							<option value="37">Slow</option>
+							<option value="50">Slower</option>
 						</select>	
 					</div>
 				</td>
