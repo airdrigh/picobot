@@ -623,6 +623,14 @@
 			lines.style.top = (-diff + 1) + "px" 
 		}
 
+		function startStop() {
+			if (updateTimer == "") {
+				startPicobot();
+			} else {
+				stopPicobot();
+			}
+		}
+		
 		function startPicobot() {
 			if (complete) {
 				complete = false;
@@ -631,6 +639,7 @@
 			if (updateTimer == "") {
 				evaluatePicobotPosition();
 				updateTimer = window.setInterval("update()", speed);
+				document.getElementById('startStop').innerText = "Stop";
 			}
 		}
 
@@ -638,6 +647,7 @@
 			if (updateTimer != "") {
 				window.clearInterval(updateTimer);
 				updateTimer = "";
+				document.getElementById('startStop').innerText = "Start";
 
 				updatePicobotImage();
 				state = State.IDLE;
@@ -648,7 +658,7 @@
 
 		function step() {
 			oneStep = true;
-			startPicobot();
+			startStop();
 		}
 		
 		function interpretRules() {
@@ -946,6 +956,11 @@
 				z-index: -1;
 			}
 
+			button {
+				width:80px;
+				margin:2px;
+			}
+			
 			img {
 				margin: 0;
 				padding: 0;
@@ -982,7 +997,7 @@
 						<button onclick="nudgePicobot(Direction.UP)">Up</button> | <button onclick="nudgePicobot(Direction.DOWN)">Down</button> |
 						<button onclick="nudgePicobot(Direction.LEFT)">Left</button> | <button onclick="nudgePicobot(Direction.RIGHT)">Right</button> |
 -->
-						<button onclick="startPicobot()">Start</button> | <button onclick="stopPicobot()">Stop</button> | <button onclick="step()">Step</button>
+						<button id="startStop" onclick="startStop()">Start</button> | <button onclick="step()">Step</button>
 
 <!-- color change unused in this version
 						<br/>
@@ -999,7 +1014,7 @@
 							<option value="5">Map 5: Obstacles</option>
 							<option value="6">Map 6: Rooms + Obstacles</option>
 						</select>	
-
+						|
 						<select onchange="changeSpeed(this)">
 							<option value="1">Faster</option>
 							<option value="12">Fast</option>
