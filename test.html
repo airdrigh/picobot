@@ -349,6 +349,9 @@
 		}
 
 		function toggleWall(index) {
+			if (updateTimer != "") {
+				return;	// no changing walls while running
+			}
 			if (puzzle[index].src.match("empty")) {
 				setWall(index, chooseWall(index));
 				numEmptyCells--;
