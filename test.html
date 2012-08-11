@@ -455,7 +455,8 @@
 
 		function createWorld() {
 			stepNum = 0;
-						
+			surroundings.innerText = "";
+			
 			puzzle = new Array(WIDTH * HEIGHT);
 
 			world = document.getElementById('world');
@@ -543,6 +544,7 @@
 		}
 
 		function initialize() {
+			surroundings = document.getElementById('surroundings');
 						
 			randomPicobot();
 			createWorld();
@@ -551,7 +553,6 @@
 				createCodeBox('codebox');
 			}
 			
-			surroundings = document.getElementById('surroundings');
 		
 			interpretRules();
 			step();
@@ -774,13 +775,7 @@
 			rules = new_rules;
 		}
 
-		function outputStatus(rule) {
-			
-			if (complete) {
-				surroundings.innerHTML = "STEP "+stepNum+": Complete!";
-				return;
-			}
-			
+		function surroundingsShort() {
 			var str = "";
 			if (isWall(picobot[0], picobot[1]-1)) {
 				str = str + "N";
@@ -806,13 +801,46 @@
 			else {
 				str = str + "s";
 			}
+			return str;
+		}
+		
+		function surroundingsLong() {
+			var str = "";
+			if (isWall(picobot[0], picobot[1]-1)) {
+				str = str + "North ";
+			}	
+			if (isWall(picobot[0]+1, picobot[1])) {
+				str = str + "East ";
+			}
+			if (isWall(picobot[0]-1, picobot[1])) {
+				str = str + "West ";
+			}
+			if (isWall(picobot[0], picobot[1]+1)) {
+				str = str + "South ";
+			}
+			var words = str.split(" ");
+			words.pop(); // chomp trailing space
+			str = words.join(", ");
+			return str;
+		}
+		
+		function outputStatus(rule) {
 			
-			surroundings.innerHTML = "STEP " + stepNum++ + 
-			": state: " + picobot_state + 
-			" surroundings: " + str + 
-			" applying rule from line #" + rule.lineNum + 
+			if (complete) {
+				surroundings.innerHTML += "STEP "+stepNum+": Complete!"+"\n";
+				surroundings.scrollTop = surroundings.scrollHeight;	// scroll to end
+				return;
+			}
+			
+			str = surroundingsLong();
+			surroundings.innerHTML += "STEP " + stepNum++ + 
+			": state " + picobot_state + 
+			"; Walls to " + str + 
+			"; Applying rule from line #" + rule.lineNum + 
 			" ( " + rule.state + " " + rule.match +
-			" -> " + rule.next_direction + " " + rule.next_state + " )";
+			" -> " + rule.next_direction + " " + rule.next_state + " )"+"\n";
+			surroundings.scrollTop = surroundings.scrollHeight; // scroll to end
+			
 		}
 		
 		var i = 0;
@@ -958,6 +986,12 @@
 
 				z-index: -1;
 			}
+			
+			.output_box {
+				width:1024px;
+				height:200px;
+				font-family: monospace;
+			}
 
 			button {
 				width:80px;
@@ -1065,7 +1099,6 @@
 				</td>
 			</tr>
 		</table>
-		<div id="surroundings">
-		</div>
+		<textarea class="output_box" id="surroundings" disabled></textarea>
 	</body>
 </html>
