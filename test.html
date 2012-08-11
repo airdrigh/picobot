@@ -3,7 +3,7 @@
 <html>
 	<head>
 		<script>
-		var speed = 15;
+		var speed = 1;
 		
 		var WIDTH = 25;
 		var HEIGHT = 25;
@@ -216,10 +216,10 @@
 		var surroundings;
 
 		var Direction = {
-			UP : "up",
-			DOWN : "down",
-			LEFT : "left",
-			RIGHT : "right"
+			UP : "N",
+			DOWN : "S",
+			LEFT : "W",
+			RIGHT : "E"
 		}
 
 		var State = {
@@ -237,6 +237,8 @@
 
 		var textarea = "";
 		var numEmptyCells;
+		var stepNum = 0;
+		var complete = false;
 		
 		var Color = {
 			RED : "red",
@@ -338,7 +340,6 @@
 			puzzle[index].src = "img/wall_" + wall_index + ".png";
 		}
 
-		// TODO: make this play nice with completeness tracking
 		function toggleWall(index) {
 			if (puzzle[index].src.match("empty")) {
 				setWall(index, chooseWall(index));
@@ -376,43 +377,16 @@
 				numEmptyCells--;
 				if (numEmptyCells == 0) {
 					stopPicobot();
-					surroundings.innerHTML = "Complete!";
+					complete = true;
 					return;
 				}
 			}
-			
-			var str = "";
-			if (isWall(picobot[0], picobot[1]-1)) {
-				str = str + "N";
-			}	
-			else {
-				str = str + "n";
-			}
-			if (isWall(picobot[0]+1, picobot[1])) {
-				str = str + "E";
-			}
-			else {
-				str = str + "e";
-			}
-			if (isWall(picobot[0]-1, picobot[1])) {
-				str = str + "W";
-			}
-			else {
-				str = str + "w";
-			}
-			if (isWall(picobot[0], picobot[1]+1)) {
-				str = str + "S";
-			}
-			else {
-				str = str + "s";
-			}
-
-			if (picobot_rule_invoked != "") {
+									
+			if (picobot_rule_invoked != "") {				
 				// Update picobot
 				picobot_state = picobot_rule_invoked.next_state;
 			}
 
-			surroundings.innerHTML = "state: " + picobot_state + " surroundings: " + str;
 		}
 
 		function chooseRule() {
@@ -565,7 +539,9 @@
 			}
 			
 			surroundings = document.getElementById('surroundings');
-
+		
+			interpretRules();
+			step();
 			// let the user start it running
 			// startPicobot();
 		}
@@ -702,7 +678,8 @@
 				if (line == "") {
 					continue;
 				}
-
+				rule.lineNum = i + 1;
+				
 				// Pull out parts according to current parser state
 				words = line.split(" ");
 
@@ -770,6 +747,47 @@
 			rules = new_rules;
 		}
 
+		function outputStatus(rule) {
+			
+			if (complete) {
+				surroundings.innerHTML = "STEP "+stepNum+": Complete!";
+				return;
+			}
+			
+			var str = "";
+			if (isWall(picobot[0], picobot[1]-1)) {
+				str = str + "N";
+			}	
+			else {
+				str = str + "n";
+			}
+			if (isWall(picobot[0]+1, picobot[1])) {
+				str = str + "E";
+			}
+			else {
+				str = str + "e";
+			}
+			if (isWall(picobot[0]-1, picobot[1])) {
+				str = str + "W";
+			}
+			else {
+				str = str + "w";
+			}
+			if (isWall(picobot[0], picobot[1]+1)) {
+				str = str + "S";
+			}
+			else {
+				str = str + "s";
+			}
+			
+			surroundings.innerHTML = "STEP " + stepNum++ + 
+			": state: " + picobot_state + 
+			" surroundings: " + str + 
+			" applying rule from line #" + rule.lineNum + 
+			" ( " + rule.state + " " + rule.match +
+			" -> " + rule.next_direction + " " + rule.next_state + " )";
+		}
+		
 		var i = 0;
 		function update() {
 			// Smooth movement code:
@@ -792,6 +810,8 @@
 				else if (movingDirection == Direction.RIGHT) {
 					new_value = current_left + 5;
 					picobot_cell.style.left = new_value + "px";
+				} else {
+					new_value = OFFSET;
 				}
 
 				if (new_value % 20 == OFFSET) {
@@ -810,14 +830,21 @@
 
 						if (picobot_rule_invoked == "") {
 							// No rules!
-						}
-						else if (picobot_rule_invoked.next_direction != "") {
-							// We carry out the rule
-							movePicobot(picobot_rule_invoked.next_direction);
+						} else {
+							
+							outputStatus(picobot_rule_invoked);
+							
+							if (picobot_rule_invoked.next_direction != "") {
+								// We carry out the rule
+								movePicobot(picobot_rule_invoked.next_direction);
+							}
 						}
 					} while(picobot_rule_invoked.next_direction == "");
 				}
 			} else {
+				state = State.MOVING;
+				movingDirection = "";
+				/*
 				var y = picobot[1];
 				if (i % 2) {
 					movePicobot(Direction.UP);
@@ -828,6 +855,7 @@
 				if (y == picobot[1]) {
 					i++;
 				}
+				*/
 			}
 		}
 		</script>
@@ -843,7 +871,7 @@
 			
 			.code_box {
 				width: 500px;
-				height: 500px;
+				height: 496px;
 
 				background-color: white;
 
@@ -947,8 +975,7 @@
 
 						<button onclick="changePicobotColor(Color.RED)">Red</button> | <button onclick="changePicobotColor(Color.GREEN)">Green</button>
 -->
-						<br/>
-						
+						|
 						<select onchange="changeMap(this)">
 							<option value="0">Map 0: Open Square</option>
 							<option value="1">Map 1: Diamond</option>
@@ -958,8 +985,6 @@
 							<option value="5">Map 5: Obstacles</option>
 							<option value="6">Map 6: Rooms + Obstacles</option>
 						</select>	
-					</div>
-					<div id="surroundings">
 					</div>
 				</td>
 				<td valign="top">
@@ -993,12 +1018,14 @@
 3 wN -> W 3
 3 WNs -> S 2  
 3 WNS -> E 1
-					</textarea>
+</textarea>
 
 						<button onclick="interpretRules()">Enter Rules</button>
 
 				</td>
 			</tr>
 		</table>
+		<div id="surroundings">
+		</div>
 	</body>
 </html>
