@@ -239,6 +239,7 @@
 		var numEmptyCells;
 		var stepNum = 0;
 		var complete = false;
+		var verboseLog = false;
 		
 		var Color = {
 			RED : "red",
@@ -268,6 +269,22 @@
 			if (updateTimer != "") {
 				window.clearInterval(updateTimer);
 				updateTimer = window.setInterval("update()", speed);
+			}
+		}
+		
+		function toggleLog(button) {
+			if (button.checked) {
+				document.getElementById('surroundings').style.display="block";
+			} else {
+				document.getElementById('surroundings').style.display="none";			
+			}
+		}
+		
+		function toggleVerbose(button) {
+			if (button.checked) {
+				verboseLog = true;
+			} else {
+				verboseLog = false;
 			}
 		}
 		
@@ -774,54 +791,102 @@
 
 			rules = new_rules;
 		}
-
-		function surroundingsShort() {
-			var str = "";
-			if (isWall(picobot[0], picobot[1]-1)) {
-				str = str + "N";
-			}	
-			else {
-				str = str + "n";
+		
+		function logSurroudings() {
+			if (verboseLog) {
+				var str = "";
+				if (isWall(picobot[0], picobot[1]-1)) {
+					str = str + "North ";
+				}	
+				if (isWall(picobot[0]+1, picobot[1])) {
+					str = str + "East ";
+				}
+				if (isWall(picobot[0]-1, picobot[1])) {
+					str = str + "West ";
+				}
+				if (isWall(picobot[0], picobot[1]+1)) {
+					str = str + "South ";
+				}
+				var words = str.split(" ");
+				words.pop(); // chomp trailing space
+				str = words.join(", ");
+				return "Walls to " + str;
+			} else {
+				var str = "surroundings: ";
+				if (isWall(picobot[0], picobot[1]-1)) {
+					str = str + "N";
+				}	
+				else {
+					str = str + "n";
+				}
+				if (isWall(picobot[0]+1, picobot[1])) {
+					str = str + "E";
+				}
+				else {
+					str = str + "e";
+				}
+				if (isWall(picobot[0]-1, picobot[1])) {
+					str = str + "W";
+				}
+				else {
+					str = str + "w";
+				}
+				if (isWall(picobot[0], picobot[1]+1)) {
+					str = str + "S";
+				}
+				else {
+					str = str + "s";
+				}
+				return str;
 			}
-			if (isWall(picobot[0]+1, picobot[1])) {
-				str = str + "E";
-			}
-			else {
-				str = str + "e";
-			}
-			if (isWall(picobot[0]-1, picobot[1])) {
-				str = str + "W";
-			}
-			else {
-				str = str + "w";
-			}
-			if (isWall(picobot[0], picobot[1]+1)) {
-				str = str + "S";
-			}
-			else {
-				str = str + "s";
-			}
-			return str;
 		}
 		
-		// TODO: verbose/terse option, verbose screen reader friendly
-		function surroundingsLong() {
+		function logRule(rule) {
 			var str = "";
-			if (isWall(picobot[0], picobot[1]-1)) {
-				str = str + "North ";
-			}	
-			if (isWall(picobot[0]+1, picobot[1])) {
-				str = str + "East ";
+			if (verboseLog) {
+				str += "state " + rule.state + ", ";
+
+				var wallsStr = "";
+				if (rule.match.match(/N/))
+					wallsStr += "North, ";
+				if (rule.match.match(/E/))
+					wallsStr += "East, ";
+				if (rule.match.match(/W/))
+					wallsStr += "West, ";
+				if (rule.match.match(/S/))
+					wallsStr += "South, ";
+				if (wallsStr.length > 0)
+					str += "walls " + wallsStr;
+
+				var openStr = "";
+				if (rule.match.match(/n/))
+					openStr += "North, ";
+				if (rule.match.match(/e/))
+					openStr += "East, ";
+				if (rule.match.match(/w/))
+					openStr += "West, ";
+				if (rule.match.match(/s/))
+					openStr += "South, ";
+				if (openStr.length > 0)
+					str += "open " + openStr;
+				
+				str += "move ";
+				if (rule.next_direction.match(/N/))
+					str += "North, ";
+				else if (rule.next_direction.match(/E/))
+					str += "East, ";
+				else if (rule.next_direction.match(/W/))
+					str += "West, ";
+				else if (rule.next_direction.match(/S/))
+					str += "South, ";
+				
+				str += "next state " + rule.next_state;
+			} else {
+				str += rule.state + " ";
+				str += rule.match + " -> ";
+				str += rule.next_direction + " ";
+				str += rule.next_state;
 			}
-			if (isWall(picobot[0]-1, picobot[1])) {
-				str = str + "West ";
-			}
-			if (isWall(picobot[0], picobot[1]+1)) {
-				str = str + "South ";
-			}
-			var words = str.split(" ");
-			words.pop(); // chomp trailing space
-			str = words.join(", ");
 			return str;
 		}
 		
@@ -833,13 +898,11 @@
 				return;
 			}
 			
-			str = surroundingsLong();
 			surroundings.innerHTML += "STEP " + stepNum++ + 
 			": state " + picobot_state + 
-			"; Walls to " + str + 
+			"; " + logSurroudings() + 
 			"; Applying rule #" + rule.lineNum + 
-			": " + rule.state + " " + rule.match +
-			" -> " + rule.next_direction + " " + rule.next_state +"\n";
+			": " + logRule(rule) + "\n";
 			surroundings.scrollTop = surroundings.scrollHeight; // scroll to end
 			
 		}
@@ -992,6 +1055,7 @@
 				width:1024px;
 				height:200px;
 				font-family: monospace;
+				display: none;
 			}
 
 			button {
@@ -1020,6 +1084,8 @@
 			}
 
 			body {
+				font-family:sans-serif;
+				font-size:12px;
 				margin: 0;
 				padding: 0;
 			}
@@ -1097,7 +1163,8 @@
 </textarea>
 
 						<button onclick="interpretRules()">Enter Rules</button>
-
+						<label><input type="checkbox" onclick="toggleLog(this)"/>Show Debugging Log</label>
+						<label><input type="checkbox" onclick="toggleVerbose(this)"/>Verbose Logging</label>
 				</td>
 			</tr>
 		</table>
