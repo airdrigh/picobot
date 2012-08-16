@@ -682,16 +682,17 @@
 			startStop();
 		}
 		
-		function validateSurroundingsToken(token) {
+		function validateSurroundingsToken(lineNum, token) {
 			var normalizedToken = "";
-			if (token.match(/[news]/i)) {
+			if (token.match(/^[news]{1,4}$/i)) {
 				var letters = "nNeEwWsS";
 				for (i = 0; i < letters.length; i++) {
 					var letter = letters.charAt(i);
 					var pattern = new RegExp(letter, "g");
 					var match = token.match(pattern)
 					if (match && match.length > 1) {
-						// error: more than one of the same letter 
+						errorOnLine(lineNum, "surroundings '"+token+"' cannot have more than one of the same letter");
+						return null;
 					} else if (match && match.length == 1) {
 						normalizedToken += letter;
 					}
@@ -701,18 +702,38 @@
 					var pattern = new RegExp(letter, "gi");
 					var match = token.match(pattern);
 					if (match && match.length > 1) {
-						// error: can't have both small and capital of same letter
+						errorOnLine(lineNum, "surroundings '"+token+"' cannot have the same letter in both lower and upper case");
+						return null;
 					}
 				}
 			} else {
-				// error: surroundings spec is missing or has illegal characters
+				errorOnLine(lineNum, "surroundings '"+token+"' is too long or contains illegal characters");
+				return null;
 			}
 			return normalizedToken;
 		}
 		
+		function error(message) {
+			rules = [];
+			surroundings.innerHTML = "Error: " + message;
+			surroundings.style.display = "block";
+			document.getElementById('logCheckbox').checked = true;
+			document.getElementById('startStop').disabled = true;
+			document.getElementById('step').disabled = true;
+		}
+		
+		function errorOnLine(lineNum, message) {
+			rules = [];
+			surroundings.innerHTML = "Error on line #" + lineNum + ": " + message;
+			surroundings.style.display = "block";
+			document.getElementById('logCheckbox').checked = true;
+			document.getElementById('startStop').disabled = true;
+			document.getElementById('step').disabled = true;
+		}
+		
 		function interpretRules() {
 			var new_rules = [];
-
+			surroundings.innerHTML = "";
 			var textarea = document.getElementById('codebox');
 
 			// parse textarea
@@ -762,28 +783,34 @@
 					if (token.match(/^\#/)) {
 						break;
 					} else if (k > 4) {
-						// error: extra junk after the rule
+						errorOnLine(rule.lineNum, "expected end of line after rule, found '"+token+"'");
+						return;
 					}
+					
 					switch(parserState) {
 						case ParserState.STATE_TOKEN:
 							// Might allow words here...
 							var ruleState = parseInt(token);
 							if (isNaN(ruleState)) {
-								// error: not a number
+								errorOnLine(rule.lineNum, "expected number for rule state, found '"+token+"'");
+								return;
 							} else {
 								rule.state = ruleState;
 							}
 							break;
 						case ParserState.SURROUNDINGS:
 							// Should contain 'newsNEWS' and nothing else
-							rule.match = validateSurroundingsToken(token);
+							rule.match = validateSurroundingsToken(rule.lineNum, token);
+							if (rule.match == null)
+								return;
 							break;
 						case ParserState.ARROW:
 							// Check that token == '->'
 							if (token == '->') {
 								// all good
 							} else {
-								// Parsing error
+								errorOnLine(rule.lineNum, "expected '->', found '"+token+"'");
+								return;
 							}
 							break;
 						case ParserState.NEXT_DIR:
@@ -798,23 +825,26 @@
 							} else if (token == 'X' || token == 'x') {
 								rule.next_direction = "";
 							} else {
-								// Parsing error
+								errorOnLine(rule.lineNum, "expected N, E, W, S, or X for move direction, found '"+token+"'");
+								return;
 							}
 							break;
 						case ParserState.NEXT_STATE:
 							var nextState = parseInt(token);
 							if (isNaN(nextState)) {
-								// error: not a number
+								errorOnLine(rule.lineNum, "expected number for next state, found '"+token+"'");
+								return;
 							} else {
 								rule.next_state = nextState;
 								rule.next_state = parseInt(token);
 								new_rules.push(rule); 
 								rule = {
+									lineNum: i + 1,
 									state: 0,
 									match: "",
 									next_direction: Direction.UP,
 									next_state: 0 
-								};
+								};					
 							}
 
 							break;
@@ -825,6 +855,11 @@
 			}
 			
 			rules = validateRules(new_rules);
+			if (rules == null)
+				return;
+			document.getElementById('startStop').disabled = false;
+			document.getElementById('step').disabled = false;
+			document.getElementById('enterRules').disabled = true;
 		}
 		
 		function validateRules(rules) {
@@ -838,7 +873,8 @@
 				}
 			}
 			if (!hasState0) {
-				// error
+				error("there are no rules for the starting state (state 0)");
+				return null;
 			}
 			
 			// check: if rules define transition to state N, there should be rules for state N
@@ -854,8 +890,8 @@
 			for (i = 0; i < transitionStates.length; i++) {
 				var transitionState = transitionStates[i];
 				if (ruleStates.lastIndexOf(transitionState) == -1) {
-					// error
-					break;
+					error("rules define transition to state "+transitionState+" but there are no rules for that state");
+					return null;
 				}
 			}
 			
@@ -868,13 +904,19 @@
 				if (keys.lastIndexOf(key) == -1) {
 					keys.push(key);
 				} else {
-					// error
-					break;
+					error("line #"+rule.lineNum+" defines a rule for state "+rule.state+" and surroundings "+rule.match+" but these are already used by another rule");
+					return null;
 				}
-					
 			}
 			
 			return rules;
+		}
+		
+		function textChanged() {
+			stopPicobot();
+			document.getElementById('startStop').disabled = true;
+			document.getElementById('step').disabled = true;
+			document.getElementById('enterRules').disabled = false;
 		}
 		
 		function logSurroudings() {
@@ -1089,6 +1131,7 @@
 			.code_box_numbers {
 				border:1px solid gray;
 				font-family: monospace;
+				color: gray;
 				background-color: #ddd;
 				font-size: 14px;
 				line-height: 16px;
@@ -1187,7 +1230,8 @@
 						<button onclick="nudgePicobot(Direction.UP)">Up</button> | <button onclick="nudgePicobot(Direction.DOWN)">Down</button> |
 						<button onclick="nudgePicobot(Direction.LEFT)">Left</button> | <button onclick="nudgePicobot(Direction.RIGHT)">Right</button> |
 -->
-						<button id="startStop" onclick="startStop()">Start</button> | <button onclick="step()">Step</button>
+						<button id="startStop" onclick="startStop()">Start</button> | 
+						<button id="step" onclick="step()">Step</button>
 
 <!-- color change unused in this version
 						<br/>
@@ -1215,16 +1259,17 @@
 					</div>
 				</td>
 				<td valign="top">
-					<textarea class="code_box" id="codebox">
+					<textarea class="code_box" id="codebox" wrap="off" onkeydown="textChanged()">
 # Current_State surroundings -> Go_Direction Go_into_state
 
 # Capital letters for walls, lowercase letters for openings
-# NeWs -> Wall to north and west, opening to east and south
+# NeWs : Wall to north and west, opening to east and south
 
-# Example:
+# State 0 is always the starting state
 
-# When we are in state 0, and east is clear, don't move anywhere and go to state 1
-# 0 e -> X 1 
+# Example: When we are in state 0, and east is clear,
+# don't move anywhere and go to state 1
+# 0 e -> X 1
 
 # This example just goes up and down...
 
@@ -1240,8 +1285,8 @@
 
 </textarea>
 
-						<button onclick="interpretRules()">Enter Rules</button>
-						<label><input type="checkbox" onclick="toggleLog(this)"/>Show Debugging Log</label>
+						<button id="enterRules" onclick="interpretRules()">Enter Rules</button>
+						<label><input type="checkbox" id="logCheckbox" onclick="toggleLog(this)"/>Show Debugging Log</label>
 						<label><input type="checkbox" onclick="toggleVerbose(this)"/>Verbose Logging</label>
 				</td>
 			</tr>
