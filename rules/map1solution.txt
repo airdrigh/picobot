@@ -1,0 +1,44 @@
+# syntax converted to new picobot
+# from http://www.cs.hmc.edu/~dodds/projects/RobS05/Janna/extinguisher/picobot/picobotRules-01.txt
+# also solves map 0 (square)
+# could maybe be more efficient?
+
+0 n -> N 0     # north, if cant go, then go E,W or finally back up and try side to side
+0 Ne -> E 1          
+0 NEw -> W 2
+0 NEWs -> S 4             
+          
+1 s -> S 1    # south, if cant go then go E, W or finally back up and try side to side
+1 eS -> E 0
+1 EwS -> W 3
+1 nEWS -> N 5
+     
+2 s -> S 2    # south, if can't go then W,E of finally back up and try side to side
+2 wS -> W 3
+2 eWS -> E 0	
+2 nEWS -> N 7
+     
+3 n -> N 3    # north, if can't go then W,E of finally back up and try side to side
+3 Nw -> W 2
+3 NeW -> E 1
+3 NEWs -> S 6
+     
+4 e -> E 4    # east, if cant go then N,S finally back up and try up down
+4 nE -> N 5
+4 NEs -> S 6
+4 NEwS -> W 2
+     
+5 w -> W 5
+5 nW -> N 4
+5 NWs -> S 7
+5 NeWS -> E 3
+     
+6 w -> W 6
+6 Ws -> S 7
+6 nWS -> N 7
+6 NWS -> E 1
+     
+7 e -> E 7
+7 Es -> S 6
+7 nES -> N 6
+7 NEwS -> W 0
