@@ -1226,25 +1226,18 @@
 # When we are in state 0, and east is clear, don't move anywhere and go to state 1
 # 0 e -> X 1 
 
-0 e -> E 1
-0 nE -> N 0
-0 NEw -> W 3
-0 NEW -> S 2
+# This example just goes up and down...
 
-1 s -> S 2
-1 eS -> E 1
-1 nES -> N 0
-1 NES -> W 3
+0 n -> N 0   # when in state 0 with opening to north,
+             #    go north and stay in state 0
+0 N -> X 1   # when in state 0 with wall to north,
+             #    stop and switch to state 1
 
-2 w -> W 3
-2 sW -> S 2
-2 SWe -> E 1
-2 SWE -> N 0
+1 s -> S 1   # when in state 1 with opening to south,
+             #    go south and stay in state 1
+1 S -> X 0   # when in state 1 with wall to south,
+             #    stop and switch to state 0
 
-3 n -> N 0
-3 wN -> W 3
-3 WNs -> S 2  
-3 WNS -> E 1
 </textarea>
 
 						<button onclick="interpretRules()">Enter Rules</button>
