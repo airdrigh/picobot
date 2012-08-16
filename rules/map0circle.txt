@@ -1,0 +1,13 @@
+# Goes in circle
+
+0 n -> N 0   # in state 0,  open north,  go north,  keep state 0
+0 N -> X 1   # in state 0,  wall north,  no move,   go to state 1
+                                                       
+1 e -> E 1   # in state 1,  open east,   go east,   keep state 1
+1 E -> X 2   # in state 1,  wall east,   no move,   go to state 2
+                                                       
+2 s -> S 2   # in state 2,  open south,  go south,  keep state 2
+2 S -> X 3   # in state 2,  wall south,  no move,   go to state 3
+                                                       
+3 w -> W 3   # in state 3,  open west,   go west,   keep state 3
+3 W -> X 0   # in state 3,  wall west,   no move,   go to state 0

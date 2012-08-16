@@ -1,0 +1,21 @@
+# syntax converted to new picobot
+# from rroe 2009 solution
+
+# Strategy: zigzag north and south (i.e. lawn mowing coverage)
+# until we reach a corner, then go to opposite end
+# and continue zigzag until the area is covered.
+
+0 n  -> N 0   # in state 0, empty north,             go north, keep state 0
+0 N  -> X 1   # in state 0, wall north,              no move,  go to state 1
+
+1 E  -> X 3   # in state 1, wall east,               no move,  go to state 3
+1 eS -> E 0   # in state 1, empty east / wall south, go east,  go to state 0
+1 es -> E 2   # in state 1, empty east/south,        go east,  go to state 2
+
+2 s  -> S 2   # in state 2, empty south,             go south, keep state 2
+2 eS -> X 1   # in state 2, wall south,              no move,  go to state 1
+2 ES -> X 3   # in state 2, wall south/east,         no move,  go to state 3
+
+3 nW -> X 0   # in state 3, wall west / empty north, no move,  go to state 0
+3 w  -> W 3   # in state 3, empty west / wall north, go west,  keep state 3
+3 NW -> X 2   # in state 3, wall west/north,         no move,  go to state 2

@@ -1,0 +1,32 @@
+# syntax converted to new picobot
+# from rroe 2009 solution
+
+# Strategy : "keep one hand on the left wall"
+# state = "facing"
+# i.e. move forward when a wall is to the left
+# if no wall to the left, move in that direction
+# keep "turning" if walls both ahead and left
+
+0 nW   -> N 0   # move north if possible and wall to west
+0 nw   -> W 3   # move west if no wall to west after moving north
+0 Nw   -> W 3   # move west if possible and facing north into wall
+0 NeW  -> X 1   # walls north + west, try looking east
+0 NEWs -> X 2   # walls every way but south, look south  
+
+1 Ne   -> E 1   # move east if possible and wall to north
+1 ne   -> N 0   # move north if no wall to north after moving east
+1 nE   -> N 0   # move north if possible and facing east into wall
+1 NEs  -> X 2   # walls east + north, try looking south
+1 NEwS -> X 3   # walls every way but west, look west
+
+2 Es   -> S 2   # move south if possible and wall to east
+2 es   -> E 1   # move east if no wall to east after moving south
+2 eS   -> E 1   # move east if possible and facing south into wall
+2 EwS  -> X 3   # walls south + east, try looking west
+2 nEWS -> X 0   # walls every way but north, look north
+
+3 wS   -> W 3   # move west if possible and wall to south
+3 ws   -> S 2   # move south if no wall to south after moving west
+3 Ws   -> S 2   # move south if possible and facing west into wall
+3 nWS  -> X 0   # walls west + south, try looking north
+3 NeWS -> X 1   # walls every way but east, look east
