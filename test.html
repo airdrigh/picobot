@@ -682,6 +682,34 @@
 			startStop();
 		}
 		
+		function validateSurroundingsToken(token) {
+			var normalizedToken = "";
+			if (token.match(/[news]/i)) {
+				var letters = "nNeEwWsS";
+				for (i = 0; i < letters.length; i++) {
+					var letter = letters.charAt(i);
+					var pattern = new RegExp(letter, "g");
+					var match = token.match(pattern)
+					if (match && match.length > 1) {
+						// error: more than one of the same letter 
+					} else if (match && match.length == 1) {
+						normalizedToken += letter;
+					}
+				}
+				for (i = 0; i < letters.length; i++) {
+					var letter = letters.charAt(i);
+					var pattern = new RegExp(letter, "gi");
+					var match = token.match(pattern);
+					if (match && match.length > 1) {
+						// error: can't have both small and capital of same letter
+					}
+				}
+			} else {
+				// error: surroundings spec is missing or has illegal characters
+			}
+			return normalizedToken;
+		}
+		
 		function interpretRules() {
 			var new_rules = [];
 
@@ -700,7 +728,7 @@
 			};
 
 			var i;
-			var state = ParserState.STATE_TOKEN;
+			var parserState = ParserState.STATE_TOKEN;
 
 			var rule = {
 				state: 0,
@@ -733,63 +761,120 @@
 					// Handle Comments
 					if (token.match(/^\#/)) {
 						break;
+					} else if (k > 4) {
+						// error: extra junk after the rule
 					}
-					switch(state) {
+					switch(parserState) {
 						case ParserState.STATE_TOKEN:
 							// Might allow words here...
-							rule.state = parseInt(token);
+							var ruleState = parseInt(token);
+							if (isNaN(ruleState)) {
+								// error: not a number
+							} else {
+								rule.state = ruleState;
+							}
 							break;
 						case ParserState.SURROUNDINGS:
 							// Should contain 'newsNEWS' and nothing else
-							rule.match = token;
+							rule.match = validateSurroundingsToken(token);
 							break;
 						case ParserState.ARROW:
 							// Check that token == '->'
 							if (token == '->') {
-							}
-							else {
+								// all good
+							} else {
 								// Parsing error
 							}
 							break;
 						case ParserState.NEXT_DIR:
 							if (token == 'N' || token == 'n') {
 								rule.next_direction = Direction.UP;
-							}
-							else if (token == 'S' || token == 's') {
+							} else if (token == 'S' || token == 's') {
 								rule.next_direction = Direction.DOWN;
-							}
-							else if (token == 'E' || token == 'e') {
+							} else if (token == 'E' || token == 'e') {
 								rule.next_direction = Direction.RIGHT;
-							}
-							else if (token == 'W' || token == 'w') {
+							} else if (token == 'W' || token == 'w') {
 								rule.next_direction = Direction.LEFT;
-							}
-							else if (token == 'X' || token == 'x') {
+							} else if (token == 'X' || token == 'x') {
 								rule.next_direction = "";
-							}
-							else {
+							} else {
 								// Parsing error
 							}
 							break;
 						case ParserState.NEXT_STATE:
-							rule.next_state = parseInt(token);
-							new_rules.push(rule); 
-							rule = {
-								state: 0,
-								match: "",
-								next_direction: Direction.UP,
-								next_state: 0 
-							};
-
+							var nextState = parseInt(token);
+							if (isNaN(nextState)) {
+								// error: not a number
+							} else {
+								rule.next_state = nextState;
+								rule.next_state = parseInt(token);
+								new_rules.push(rule); 
+								rule = {
+									state: 0,
+									match: "",
+									next_direction: Direction.UP,
+									next_state: 0 
+								};
+							}
 
 							break;
 					}
-					state++;
-					state %= 5;
+					parserState++;
+					parserState %= 5;
 				}
 			}
-
-			rules = new_rules;
+			
+			rules = validateRules(new_rules);
+		}
+		
+		function validateRules(rules) {
+			// check for rules in state 0 (starting state)
+			var hasState0 = false;
+			for (i = 0; i < rules.length; i++) {
+				var rule = rules[i];
+				if (rule.state == 0) {
+					hasState0 = true;
+					break;
+				}
+			}
+			if (!hasState0) {
+				// error
+			}
+			
+			// check: if rules define transition to state N, there should be rules for state N
+			var transitionStates = [];
+			var ruleStates = [];
+			for (i = 0; i < rules.length; i++) {
+				var rule = rules[i];
+				if (transitionStates.lastIndexOf(rule.next_state) == -1)
+					transitionStates.push(rule.next_state);
+				if (ruleStates.lastIndexOf(rule.state) == -1)
+					ruleStates.push(rule.state);
+			}
+			for (i = 0; i < transitionStates.length; i++) {
+				var transitionState = transitionStates[i];
+				if (ruleStates.lastIndexOf(transitionState) == -1) {
+					// error
+					break;
+				}
+			}
+			
+			// check for duplicate rules (same state+surroundings)
+			// surroundings strings got normalized to NEWS order during parsing
+			var keys = [];
+			for (i = 0; i < rules.length; i++) {
+				var rule = rules[i];
+				var key = rule.state + ":" + rule.match;
+				if (keys.lastIndexOf(key) == -1) {
+					keys.push(key);
+				} else {
+					// error
+					break;
+				}
+					
+			}
+			
+			return rules;
 		}
 		
 		function logSurroudings() {
