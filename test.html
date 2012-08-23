@@ -525,30 +525,48 @@
 			}
 		}
 
+		function moveError(direction) {
+			stopPicobot();
+			surroundings.innerHTML += "STEP "+stepNum+": Error; PicoBot can't move "+direction+" because there's a wall in that direction\n";
+			surroundings.scrollTop = surroundings.scrollHeight; // scroll to end
+			surroundings.style.display = "block";
+			document.getElementById('logCheckbox').checked = true;
+			document.getElementById('startStop').disabled = true;
+			document.getElementById('step').disabled = true;
+		}
+		
 		function movePicobot(direction) {
 			moved = false;
 			if(direction == Direction.UP) {
 				if (picobot[1] > 0 && !isWall(picobot[0], picobot[1]-1)) {
 					picobot[1]--;
 					moved = true;
+				} else {
+					moveError(direction);
 				}
 			}
 			else if (direction == Direction.DOWN) {
 				if (picobot[1] < HEIGHT-1 && !isWall(picobot[0], picobot[1]+1)) {
 					picobot[1]++;
 					moved = true;
+				} else {
+					moveError(direction);
 				}
 			}
 			else if (direction == Direction.LEFT) {
 				if (picobot[0] > 0 && !isWall(picobot[0]-1, picobot[1])) {
 					picobot[0]--;
 					moved = true;
+				} else {
+					moveError(direction);
 				}
 			}
 			else { /* Direction.RIGHT */
 				if (picobot[0] < WIDTH-1 && !isWall(picobot[0]+1, picobot[1])) {
 					picobot[0]++;
 					moved = true;
+				} else {
+					moveError(direction);
 				}
 			}
 
@@ -732,6 +750,7 @@
 		}
 		
 		function interpretRules() {
+			randomPicobot();
 			createWorld();
 			var new_rules = [];
 			surroundings.innerHTML = "";
