@@ -581,7 +581,8 @@
 
 		function initialize() {
 			surroundings = document.getElementById('surroundings');
-						
+
+			loadRulesText();		
 			randomPicobot();
 			
 			if (textarea == "") {
@@ -749,9 +750,63 @@
 			document.getElementById('step').disabled = true;
 		}
 		
+		function supports_html5_storage() {
+			try {
+				return 'localStorage' in window && window['localStorage'] !== null;
+			} catch (e) {
+				return false;
+			}
+		}
+		
+		function saveRulesText() {
+			if (supports_html5_storage()) {
+				localStorage['rulesText'] = document.getElementById('codebox').value;
+			}
+		}
+		
+		function loadRulesText() {
+			if (supports_html5_storage()) {
+				var storedText = localStorage['rulesText'];
+				if (storedText) {
+					document.getElementById('codebox').value = storedText;
+				}
+			}
+		}
+		
+		function resetRules() {
+			if (supports_html5_storage()) {
+				localStorage.removeItem('rulesText');
+			}
+			document.getElementById('codebox').value = "# Current_State surroundings -> Go_Direction Go_into_state\n\
+\n\
+# Capital letters for walls, lowercase letters for openings\n\
+# NeWs : Wall to north and west, opening to east and south\n\
+\n\
+# State 0 is always the starting state\n\
+\n\
+# Example: When we are in state 0, and east is clear,\n\
+# don't move anywhere and go to state 1\n\
+# 0 e -> X 1\n\
+\n\
+# This example just goes up and down...\n\
+\n\
+0 n -> N 0   # when in state 0 with opening to north,\n\
+             #    go north and stay in state 0\n\
+0 N -> X 1   # when in state 0 with wall to north,\n\
+             #    stop and switch to state 1\n\
+\n\
+1 s -> S 1   # when in state 1 with opening to south,\n\
+             #    go south and stay in state 1\n\
+1 S -> X 0   # when in state 1 with wall to south,\n\
+             #    stop and switch to state 0\n\
+";
+			interpretRules();
+		}
 		function interpretRules() {
 			randomPicobot();
 			createWorld();
+			saveRulesText();
+			
 			var new_rules = [];
 			surroundings.innerHTML = "";
 			var textarea = document.getElementById('codebox');
@@ -1206,7 +1261,7 @@
 				display: none;
 			}
 
-			button {
+			.startStopStep {
 				width:80px;
 				margin:2px;
 			}
@@ -1250,8 +1305,8 @@
 						<button onclick="nudgePicobot(Direction.UP)">Up</button> | <button onclick="nudgePicobot(Direction.DOWN)">Down</button> |
 						<button onclick="nudgePicobot(Direction.LEFT)">Left</button> | <button onclick="nudgePicobot(Direction.RIGHT)">Right</button> |
 -->
-						<button id="startStop" onclick="startStop()">Start</button> | 
-						<button id="step" onclick="step()">Step</button>
+						<button class="startStopStep" id="startStop" onclick="startStop()">Start</button>
+						<button class="startStopStep" id="step" onclick="step()">Step</button>
 
 <!-- color change unused in this version
 						<br/>
@@ -1305,7 +1360,8 @@
 
 </textarea>
 
-						<button id="enterRules" onclick="interpretRules()">Enter Rules</button>
+						<button id="enterRules" onclick="interpretRules()">Enter My Rules</button>
+						<button id="resetRules" onclick="resetRules()">Load Default Rules</button>
 						<label><input type="checkbox" id="logCheckbox" onclick="toggleLog(this)"/>Show Debugging Log</label>
 						<label><input type="checkbox" onclick="toggleVerbose(this)"/>Verbose Logging</label>
 				</td>
