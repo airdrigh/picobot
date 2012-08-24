@@ -274,6 +274,9 @@
 		}
 		
 		function toggleLog(button) {
+			if (supports_html5_storage()) {
+				localStorage['showLog'] = button.checked;
+			}
 			if (button.checked) {
 				document.getElementById('surroundings').style.display="block";
 			} else {
@@ -282,6 +285,9 @@
 		}
 		
 		function toggleVerbose(button) {
+			if (supports_html5_storage()) {
+				localStorage['verboseLog'] = button.checked;
+			}
 			if (button.checked) {
 				verboseLog = true;
 			} else {
@@ -583,14 +589,13 @@
 		function initialize() {
 			surroundings = document.getElementById('surroundings');
 
-			loadRulesText();		
+			loadRulesText();
 			randomPicobot();
 			
 			if (textarea == "") {
 				createCodeBox('codebox');
 			}
-			
-		
+					
 			interpretRules();
 			step();
 			// let the user start it running
@@ -771,6 +776,20 @@
 				if (storedText) {
 					document.getElementById('codebox').value = storedText;
 				}
+				if (localStorage['showLog']) {
+					document.getElementById('surroundings').style.display="block";
+					document.getElementById('logCheckbox').checked = true;
+				} else {
+					document.getElementById('surroundings').style.display="none";			
+					document.getElementById('logCheckbox').checked = false;
+				}
+				if (localStorage['verboseLog']) {
+					verboseLog = true;
+					document.getElementById('verboseCheckbox').checked = true;
+				} else {
+					verboseLog = false;
+					document.getElementById('verboseCheckbox').checked = false;
+				}				
 			}
 		}
 		
@@ -1387,7 +1406,7 @@
 						<button id="enterRules" onclick="interpretRules()">Enter My Rules</button>
 						<button id="resetRules" onclick="resetRules()">Load Default Rules</button>
 						<label><input type="checkbox" id="logCheckbox" onclick="toggleLog(this)"/>Show Debugging Log</label>
-						<label><input type="checkbox" onclick="toggleVerbose(this)"/>Verbose Logging</label>
+						<label><input type="checkbox" id="verboseCheckbox" onclick="toggleVerbose(this)"/>Verbose Logging</label>
 				</td>
 			</tr>
 		</table>
