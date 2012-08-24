@@ -1073,21 +1073,28 @@
 				if (openStr.length > 0)
 					str += "open " + openStr;
 				
-				str += "move ";
-				if (rule.next_direction.match(/N/))
-					str += "North, ";
-				else if (rule.next_direction.match(/E/))
-					str += "East, ";
-				else if (rule.next_direction.match(/W/))
-					str += "West, ";
-				else if (rule.next_direction.match(/S/))
-					str += "South, ";
-				
+				if (rule.next_direction == "") {
+					str += "don't move, ";
+				} else {
+					str += "move ";
+					if (rule.next_direction.match(/N/))
+						str += "North, ";
+					else if (rule.next_direction.match(/E/))
+						str += "East, ";
+					else if (rule.next_direction.match(/W/))
+						str += "West, ";
+					else if (rule.next_direction.match(/S/))
+						str += "South, ";
+				}
 				str += "next state " + rule.next_state;
 			} else {
 				str += rule.state + " ";
 				str += rule.match + " -> ";
-				str += rule.next_direction + " ";
+				if (rule.next_direction == "") {
+					str += "X ";
+				} else {
+					str += rule.next_direction + " ";					
+				}
 				str += rule.next_state;
 			}
 			return str;
