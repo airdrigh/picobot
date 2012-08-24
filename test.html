@@ -1158,7 +1158,13 @@
 						picobot_rule_invoked = chooseRule();
 
 						if (picobot_rule_invoked == "") {
-							// No rules!
+							stopPicobot();
+							surroundings.innerHTML += "STEP "+stepNum+": Error; PicoBot has no rule for state " + picobot_state + " and " + logSurroudings() + "\n";
+							surroundings.scrollTop = surroundings.scrollHeight; // scroll to end
+							surroundings.style.display = "block";
+							document.getElementById('logCheckbox').checked = true;
+							document.getElementById('startStop').disabled = true;
+							document.getElementById('step').disabled = true;
 						} else {
 							
 							outputStatus(picobot_rule_invoked);
