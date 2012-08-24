@@ -4,6 +4,7 @@
 	<head>
 		<script>
 		var speed = 1;
+		var stallLimit = 16;
 		
 		var WIDTH = 25;
 		var HEIGHT = 25;
@@ -472,6 +473,7 @@
 
 		function createWorld() {
 			stepNum = 0;
+			lastMoveStep = stepNum;
 			surroundings.innerText = "";
 			picobot_state = 0;
 			picobot_rule_invoked = "";
@@ -532,8 +534,6 @@
 			surroundings.scrollTop = surroundings.scrollHeight; // scroll to end
 			surroundings.style.display = "block";
 			document.getElementById('logCheckbox').checked = true;
-			document.getElementById('startStop').disabled = true;
-			document.getElementById('step').disabled = true;
 		}
 		
 		function movePicobot(direction) {
@@ -1163,8 +1163,7 @@
 							surroundings.scrollTop = surroundings.scrollHeight; // scroll to end
 							surroundings.style.display = "block";
 							document.getElementById('logCheckbox').checked = true;
-							document.getElementById('startStop').disabled = true;
-							document.getElementById('step').disabled = true;
+							return;
 						} else {
 							
 							outputStatus(picobot_rule_invoked);
@@ -1172,8 +1171,17 @@
 							if (picobot_rule_invoked.next_direction != "") {
 								// We carry out the rule
 								movePicobot(picobot_rule_invoked.next_direction);
+								lastMoveStep = stepNum;
 							} else {
 								movingDirection = "";
+								if (stepNum - lastMoveStep > stallLimit) {
+									stopPicobot();
+									surroundings.innerHTML += "STEP "+stepNum+": Error; PicoBot has not moved in "+stallLimit+" steps -- stopping to avoid browser crash\n";
+									surroundings.scrollTop = surroundings.scrollHeight; // scroll to end
+									surroundings.style.display = "block";
+									document.getElementById('logCheckbox').checked = true;
+									return;
+								}
 							}
 						}
 					} while(picobot_rule_invoked.next_direction == "");
